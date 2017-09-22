@@ -9,6 +9,8 @@ Suppose you know everything about Vulkan. The following instruction is written f
 
 Currently c++ demo is finish. I will finish C version demo soon :-)
 
+I've marked and comment on every important code. simply search "**MODIFIED BY TIM**"
+
 ## Threading in Vulkan is delightful. WATCH!
 ```cpp
 Demo demo;
