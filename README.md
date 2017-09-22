@@ -46,13 +46,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 
     done = false;  // initialize loop condition variable
 	
-	std::atomic<bool> should_stop;
-	should_stop.store(false);
-	std::thread t(render_thread, std::ref(demo), std::ref(should_stop));
+    std::atomic<bool> should_stop;
+    should_stop.store(false);
+    std::thread t(render_thread, std::ref(demo), std::ref(should_stop));
 
-	nana::exec();
-	should_stop.store(true);
-	t.join();
+    nana::exec();
+    should_stop.store(true);
+    t.join();
     demo.cleanup();
 
     return (int)msg.wParam;

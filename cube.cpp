@@ -247,7 +247,7 @@ struct Demo {
     bool loadTexture(const char *, uint8_t *, vk::SubresourceLayout *, int32_t *, int32_t *);
     bool memory_type_from_properties(uint32_t, vk::MemoryPropertyFlags, uint32_t *);
 
-	
+
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
     void run();
     void create_window();
@@ -387,7 +387,7 @@ struct Demo {
     uint32_t current_buffer;
     uint32_t queue_family_count;
 
-	nana::form_loader<nana::form> ldr;
+    nana::form_loader<nana::form> ldr;
 };
 
 #ifdef _WIN32
@@ -1073,13 +1073,13 @@ Demo::Demo()
             VERIFY(result == vk::Result::eSuccess);
 
             for (uint32_t i = 0; i < instance_extension_count; i++) {
-				// MODIFIED BY TIM: important area, add extension for vulkan surfaces
+                // MODIFIED BY TIM: important area, add extension for vulkan surfaces
                 if (!strcmp(VK_KHR_SURFACE_EXTENSION_NAME, instance_extensions[i].extensionName)) {
                     surfaceExtFound = 1;
                     extension_names[enabled_extension_count++] = VK_KHR_SURFACE_EXTENSION_NAME;
                 }
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
-				// MODIFIED BY TIM: important area, add platform extension for vulkan surfaces
+                // MODIFIED BY TIM: important area, add platform extension for vulkan surfaces
                 if (!strcmp(VK_KHR_WIN32_SURFACE_EXTENSION_NAME, instance_extensions[i].extensionName)) {
                     platformSurfaceExtFound = 1;
                     extension_names[enabled_extension_count++] = VK_KHR_WIN32_SURFACE_EXTENSION_NAME;
@@ -1291,12 +1291,12 @@ Demo::Demo()
     // Create a WSI surface for the window:
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
         {
-			// MODIFIED BY TIM: HERE you can connect your window with vulkan surface
+            // MODIFIED BY TIM: HERE you can connect your window with vulkan surface
             auto const createInfo = vk::Win32SurfaceCreateInfoKHR().setHinstance(connection).setHwnd(window);
 
             auto result = inst.createWin32SurfaceKHR(&createInfo, nullptr, &surface);
             VERIFY(result == vk::Result::eSuccess);
-			//////////////////////////////////////////////////////
+            //////////////////////////////////////////////////////
         }
 #elif defined(VK_USE_PLATFORM_WAYLAND_KHR)
         {
@@ -1327,8 +1327,8 @@ Demo::Demo()
         }
 #endif
         // Iterate over each queue to learn whether it supports presenting:
-		// MODIFIED BY TIM: Check if the queue family supports presenting.
-		// if you are using c version API: vkGetPhysicalDeviceSurfaceSupportKHR
+        // MODIFIED BY TIM: Check if the queue family supports presenting.
+        // if you are using c version API: vkGetPhysicalDeviceSurfaceSupportKHR
         std::unique_ptr<vk::Bool32[]> supportsPresent(new vk::Bool32[queue_family_count]);
         for (uint32_t i = 0; i < queue_family_count; i++) {
             gpu.getSurfaceSupportKHR(i, surface, &supportsPresent[i]);
@@ -2420,14 +2420,14 @@ Demo::Demo()
     }
 
     void Demo::create_window() {
-		// MODIFIED BY TIM
+        // MODIFIED BY TIM
 
-		ldr = nana::form_loader<nana::form>();
-		nana::form &fm = ldr(nana::API::make_center(width, height));
-		fm.caption(name);
+        ldr = nana::form_loader<nana::form>();
+        nana::form &fm = ldr(nana::API::make_center(width, height));
+        fm.caption(name);
         
-		window = reinterpret_cast<HWND>(fm.native_handle());
-		///////////////////////////////////////////////////////////
+        window = reinterpret_cast<HWND>(fm.native_handle());
+        ///////////////////////////////////////////////////////////
 
         // Window client area size must be at least 1 pixel high, to prevent
         // crash.
@@ -2816,9 +2816,9 @@ Demo demo;
 #include <atomic>
 void render_thread(Demo &demo, std::atomic<bool> &should_stop) 
 {
-	while (!should_stop.load()) {
-		demo.run();
-	}
+    while (!should_stop.load()) {
+        demo.run();
+    }
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow) {
@@ -2873,21 +2873,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     }
 
     demo.connection = hInstance;
-	memcpy((char *)demo.name, (const char *)L"cube", APP_NAME_STR_LEN);
+    memcpy((char *)demo.name, (const char *)L"cube", APP_NAME_STR_LEN);
     demo.create_window();
     demo.init_vk_swapchain();
 
     demo.prepare();
 
-	std::atomic<bool> should_stop;
-	should_stop.store(false);
-	std::thread t(render_thread, std::ref(demo), std::ref(should_stop));
+    std::atomic<bool> should_stop;
+    should_stop.store(false);
+    std::thread t(render_thread, std::ref(demo), std::ref(should_stop));
 
-	nana::exec();
+    nana::exec();
 
-	should_stop.store(true);
+    should_stop.store(true);
 
-	t.join();
+    t.join();
 
     demo.cleanup();
 
