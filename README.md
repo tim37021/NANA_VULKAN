@@ -7,7 +7,7 @@ Suppose you know everything about Vulkan. The following instruction is written f
 3. Create vulkan surface for windows with vkCreateWin32SurfaceKHR. Pass nana::form::native_handle() to HWND parameter. for C++ wrapper vk::Instance::createWin32SurfaceKHR.
 4. Move you render stuff to other thread.(It will save your time..) Nana will block on nana::exec call. Or you can use draw_through event. Please refer to OpenGL example in this article https://sourceforge.net/p/nanapro/blog/2015/01/tour-of-nana-10/
 
-Currently c++ demo is finish. I will finish C version demo soon :-)
+Currently c++ demo is finish. I will finish C version demo soon :-) Note that include/lib path must be change to build the project.
 
 I've marked and comment on every important code. simply search "**MODIFIED BY TIM**"
 
