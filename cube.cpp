@@ -31,6 +31,8 @@
 #include <csignal>
 #include <memory>
 
+#include <nana/gui.hpp>
+
 #if defined(VK_USE_PLATFORM_MIR_KHR)
 #warning "Cubepp does not have code for Mir at this time"
 #endif
@@ -60,7 +62,7 @@
 #ifdef _WIN32
 #define ERR_EXIT(err_msg, err_class)                                          \
     do {                                                                      \
-        if (!suppress_popups) MessageBox(nullptr, err_msg, err_class, MB_OK); \
+        if (!suppress_popups) MessageBoxA(nullptr, err_msg, err_class, MB_OK); \
         exit(1);                                                              \
     } while (0)
 #else
@@ -245,6 +247,7 @@ struct Demo {
     bool loadTexture(const char *, uint8_t *, vk::SubresourceLayout *, int32_t *, int32_t *);
     bool memory_type_from_properties(uint32_t, vk::MemoryPropertyFlags, uint32_t *);
 
+	
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
     void run();
     void create_window();
@@ -269,7 +272,7 @@ struct Demo {
     HINSTANCE connection;         // hInstance - Windows Instance
     HWND window;                  // hWnd - window handle
     POINT minsize;                // minimum window size
-    char name[APP_NAME_STR_LEN];  // Name to put on the window/icon
+    wchar_t name[APP_NAME_STR_LEN];  // Name to put on the window/icon
 #elif defined(VK_USE_PLATFORM_XLIB_KHR)
     Window xlib_window;
     Atom xlib_wm_delete_window;
@@ -383,6 +386,8 @@ struct Demo {
 
     uint32_t current_buffer;
     uint32_t queue_family_count;
+
+	nana::form_loader<nana::form> ldr;
 };
 
 #ifdef _WIN32
@@ -1068,11 +1073,13 @@ Demo::Demo()
             VERIFY(result == vk::Result::eSuccess);
 
             for (uint32_t i = 0; i < instance_extension_count; i++) {
+				// MODIFIED BY TIM: important area, add extension for vulkan surfaces
                 if (!strcmp(VK_KHR_SURFACE_EXTENSION_NAME, instance_extensions[i].extensionName)) {
                     surfaceExtFound = 1;
                     extension_names[enabled_extension_count++] = VK_KHR_SURFACE_EXTENSION_NAME;
                 }
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
+				// MODIFIED BY TIM: important area, add platform extension for vulkan surfaces
                 if (!strcmp(VK_KHR_WIN32_SURFACE_EXTENSION_NAME, instance_extensions[i].extensionName)) {
                     platformSurfaceExtFound = 1;
                     extension_names[enabled_extension_count++] = VK_KHR_WIN32_SURFACE_EXTENSION_NAME;
@@ -1284,10 +1291,12 @@ Demo::Demo()
     // Create a WSI surface for the window:
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
         {
+			// MODIFIED BY TIM: HERE you can connect your window with vulkan surface
             auto const createInfo = vk::Win32SurfaceCreateInfoKHR().setHinstance(connection).setHwnd(window);
 
             auto result = inst.createWin32SurfaceKHR(&createInfo, nullptr, &surface);
             VERIFY(result == vk::Result::eSuccess);
+			//////////////////////////////////////////////////////
         }
 #elif defined(VK_USE_PLATFORM_WAYLAND_KHR)
         {
@@ -1318,6 +1327,8 @@ Demo::Demo()
         }
 #endif
         // Iterate over each queue to learn whether it supports presenting:
+		// MODIFIED BY TIM: Check if the queue family supports presenting.
+		// if you are using c version API: vkGetPhysicalDeviceSurfaceSupportKHR
         std::unique_ptr<vk::Bool32[]> supportsPresent(new vk::Bool32[queue_family_count]);
         for (uint32_t i = 0; i < queue_family_count; i++) {
             gpu.getSurfaceSupportKHR(i, surface, &supportsPresent[i]);
@@ -2409,52 +2420,14 @@ Demo::Demo()
     }
 
     void Demo::create_window() {
-        WNDCLASSEX win_class;
+		// MODIFIED BY TIM
 
-        // Initialize the window class structure:
-        win_class.cbSize = sizeof(WNDCLASSEX);
-        win_class.style = CS_HREDRAW | CS_VREDRAW;
-        win_class.lpfnWndProc = WndProc;
-        win_class.cbClsExtra = 0;
-        win_class.cbWndExtra = 0;
-        win_class.hInstance = connection;  // hInstance
-        win_class.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
-        win_class.hCursor = LoadCursor(nullptr, IDC_ARROW);
-        win_class.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
-        win_class.lpszMenuName = nullptr;
-        win_class.lpszClassName = name;
-        win_class.hIconSm = LoadIcon(nullptr, IDI_WINLOGO);
-
-        // Register window class:
-        if (!RegisterClassEx(&win_class)) {
-            // It didn't work, so try to give a useful error:
-            printf("Unexpected error trying to start the application!\n");
-            fflush(stdout);
-            exit(1);
-        }
-
-        // Create window with the registered class:
-        RECT wr = {0, 0, static_cast<LONG>(width), static_cast<LONG>(height)};
-        AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);
-        window = CreateWindowEx(0,
-                                name,                  // class name
-                                name,                  // app name
-                                WS_OVERLAPPEDWINDOW |  // window style
-                                    WS_VISIBLE | WS_SYSMENU,
-                                100, 100,            // x/y coords
-                                wr.right - wr.left,  // width
-                                wr.bottom - wr.top,  // height
-                                nullptr,             // handle to parent
-                                nullptr,             // handle to menu
-                                connection,          // hInstance
-                                nullptr);            // no extra parameters
-
-        if (!window) {
-            // It didn't work, so try to give a useful error:
-            printf("Cannot create a window in which to draw!\n");
-            fflush(stdout);
-            exit(1);
-        }
+		ldr = nana::form_loader<nana::form>();
+		nana::form &fm = ldr(nana::API::make_center(width, height));
+		fm.caption(name);
+        
+		window = reinterpret_cast<HWND>(fm.native_handle());
+		///////////////////////////////////////////////////////////
 
         // Window client area size must be at least 1 pixel high, to prevent
         // crash.
@@ -2839,39 +2812,18 @@ Demo::Demo()
 
 Demo demo;
 
-// MS-Windows event handling function:
-LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    switch (uMsg) {
-        case WM_CLOSE:
-            PostQuitMessage(validation_error);
-            break;
-        case WM_PAINT:
-            demo.run();
-            break;
-        case WM_GETMINMAXINFO:  // set window's minimum size
-            ((MINMAXINFO *)lParam)->ptMinTrackSize = demo.minsize;
-            return 0;
-        case WM_SIZE:
-            // Resize the application to the new window size, except when
-            // it was minimized. Vulkan doesn't support images or swapchains
-            // with width=0 and height=0.
-            if (wParam != SIZE_MINIMIZED) {
-                demo.width = lParam & 0xffff;
-                demo.height = (lParam & 0xffff0000) >> 16;
-                demo.resize();
-            }
-            break;
-        default:
-            break;
-    }
-
-    return (DefWindowProc(hWnd, uMsg, wParam, lParam));
+#include <thread>
+#include <atomic>
+void render_thread(Demo &demo, std::atomic<bool> &should_stop) 
+{
+	while (!should_stop.load()) {
+		demo.run();
+	}
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow) {
     // TODO: Gah.. refactor. This isn't 1989.
     MSG msg;    // message
-    bool done;  // flag saying when app is complete
     int argc;
     char **argv;
 
@@ -2921,27 +2873,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     }
 
     demo.connection = hInstance;
-    strncpy(demo.name, "cube", APP_NAME_STR_LEN);
+	memcpy((char *)demo.name, (const char *)L"cube", APP_NAME_STR_LEN);
     demo.create_window();
     demo.init_vk_swapchain();
 
     demo.prepare();
 
-    done = false;  // initialize loop condition variable
+	std::atomic<bool> should_stop;
+	should_stop.store(false);
+	std::thread t(render_thread, std::ref(demo), std::ref(should_stop));
 
-    // main message loop
-    while (!done) {
-        PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE);
-        if (msg.message == WM_QUIT)  // check for a quit message
-        {
-            done = true;  // if found, quit app
-        } else {
-            /* Translate and dispatch to event queue*/
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }
-        RedrawWindow(demo.window, nullptr, nullptr, RDW_INTERNALPAINT);
-    }
+	nana::exec();
+
+	should_stop.store(true);
+
+	t.join();
 
     demo.cleanup();
 
