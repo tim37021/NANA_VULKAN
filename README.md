@@ -26,18 +26,10 @@ void render_thread(Demo &demo, std::atomic<bool> &should_stop)
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow) {
     // ...
-    /* skipped */
+    // skipped
     demo.init(argc, argv);
-
-    // Free up the items we had to allocate for the command line arguments.
-    if (argc > 0 && argv != nullptr) {
-        for (int iii = 0; iii < argc; iii++) {
-            if (argv[iii] != nullptr) {
-                free(argv[iii]);
-            }
-        }
-        free(argv);
-    }
+    // skipped
+    // ....
 
     demo.connection = hInstance;
 	memcpy((char *)demo.name, (const char *)L"cube", APP_NAME_STR_LEN);
@@ -46,8 +38,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 
     demo.prepare();
 
-    done = false;  // initialize loop condition variable
-	
     std::atomic<bool> should_stop;
     should_stop.store(false);
     std::thread t(render_thread, std::ref(demo), std::ref(should_stop));
