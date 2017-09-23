@@ -3,11 +3,11 @@
 Suppose you know everything about Vulkan. The following instruction is written for windows. But it is almost the same for other systems
 
 1. Enable two extensions when creating instance. VK_KHR_SURFACE_EXTENSION_NAME and VK_KHR_WIN32_SURFACE_EXTENSION_NAME
-2. Check if the queue family support presentation support with vkGetPhysicalDeviceWin32PresentationSupportKHR. for C++ wrapper vk::PhysicalDevice::getSurfaceSupportKHR member function
-3. Create vulkan surface for windows with vkCreateWin32SurfaceKHR. Pass nana::form::native_handle() to HWND parameter. for C++ wrapper vk::Instance::createWin32SurfaceKHR.
-4. Move you render stuff to other thread.(It will save your time..) Nana will block on nana::exec call. Or you can use draw_through event. Please refer to OpenGL example in this article https://sourceforge.net/p/nanapro/blog/2015/01/tour-of-nana-10/
+2. Create vulkan surface for windows with vkCreateWin32SurfaceKHR. Pass nana::form::native_handle() to HWND parameter. for C++ wrapper vk::Instance::createWin32SurfaceKHR.
+3. Check if the queue family supports presentation on the surface with vkGetPhysicalDeviceSurfaceSupportKHR. for C++ wrapper vk::PhysicalDevice::getSurfaceSupportKHR member function
+4. Move your render stuff to other thread.(It will save your time..) Nana will block on nana::exec call. Or you can use draw_through event. Please refer to OpenGL example in this article https://sourceforge.net/p/nanapro/blog/2015/01/tour-of-nana-10/
 
-Currently c++ demo is finish. I will finish C version demo soon :-) Note that include/lib path must be change to build the project.
+Currently c++ demo is finished. I will finish C version demo soon :-) Note that include/lib path must be change to build the project.
 
 I've marked and comment on every important code. simply search "**MODIFIED BY TIM**"
 
