@@ -247,10 +247,11 @@ struct Demo {
     bool loadTexture(const char *, uint8_t *, vk::SubresourceLayout *, int32_t *, int32_t *);
     bool memory_type_from_properties(uint32_t, vk::MemoryPropertyFlags, uint32_t *);
 
-
 #if defined(VK_USE_PLATFORM_WIN32_KHR)
     void run();
-    void create_window();
+	// MODIFIED BY TIM: We want to completely separate rendering and GUI
+    //void create_window();
+	void attach_window(HWND hwnd);
 #elif defined(VK_USE_PLATFORM_XLIB_KHR)
     void create_xlib_window();
     void handle_xlib_event(const XEvent *);
@@ -386,8 +387,6 @@ struct Demo {
 
     uint32_t current_buffer;
     uint32_t queue_family_count;
-
-    nana::form_loader<nana::form> ldr;
 };
 
 #ifdef _WIN32
@@ -2418,22 +2417,13 @@ Demo::Demo()
             PostQuitMessage(validation_error);
         }
     }
+	void Demo::attach_window(HWND hwnd)
+	{
 
-    void Demo::create_window() {
-        // MODIFIED BY TIM
-
-        ldr = nana::form_loader<nana::form>();
-        nana::form &fm = ldr(nana::API::make_center(width, height));
-        fm.caption(name);
-        
-        window = reinterpret_cast<HWND>(fm.native_handle());
-        ///////////////////////////////////////////////////////////
-
-        // Window client area size must be at least 1 pixel high, to prevent
-        // crash.
-        minsize.x = GetSystemMetrics(SM_CXMINTRACK);
-        minsize.y = GetSystemMetrics(SM_CYMINTRACK) + 1;
-    }
+		window = hwnd;
+		minsize.x = GetSystemMetrics(SM_CXMINTRACK);
+		minsize.y = GetSystemMetrics(SM_CYMINTRACK) + 1;
+	}
 #elif defined(VK_USE_PLATFORM_XLIB_KHR)
 
     void Demo::create_xlib_window() {
@@ -2821,6 +2811,8 @@ void render_thread(Demo &demo, std::atomic<bool> &should_stop)
     }
 }
 
+#include <nana/gui/timer.hpp>
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow) {
     // TODO: Gah.. refactor. This isn't 1989.
     MSG msg;    // message
@@ -2874,7 +2866,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 
     demo.connection = hInstance;
     memcpy((char *)demo.name, (const char *)L"cube", APP_NAME_STR_LEN);
-    demo.create_window();
+
+	nana::form fm(nana::rectangle{0, 0, demo.width, demo.height});
+	fm.show();
+    demo.attach_window(reinterpret_cast<HWND>(fm.native_handle()));
     demo.init_vk_swapchain();
 
     demo.prepare();
