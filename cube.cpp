@@ -2804,10 +2804,11 @@ Demo demo;
 
 #include <thread>
 #include <atomic>
-void render_thread(Demo &demo, std::atomic<bool> &should_stop) 
+void render_thread(Demo &demo, std::atomic<bool> &should_stop, std::atomic<uint32_t> &fps) 
 {
     while (!should_stop.load()) {
         demo.run();
+		fps++;
     }
 }
 
@@ -2875,8 +2876,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     demo.prepare();
 
     std::atomic<bool> should_stop;
+	std::atomic<uint32_t> fps;
     should_stop.store(false);
-    std::thread t(render_thread, std::ref(demo), std::ref(should_stop));
+	fps.store(0);
+    std::thread t(render_thread, std::ref(demo), std::ref(should_stop), std::ref(fps));
+
+	nana::timer tmr;
+	tmr.interval(1000);
+	tmr.elapse([&fps, &fm]() {
+		fm.caption(std::to_string(fps.load()));
+		fps.store(0);
+	});
+	tmr.start();
 
     nana::exec();
 
